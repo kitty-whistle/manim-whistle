@@ -71,13 +71,13 @@ class VerticeWhistle(Dot):
         """
         return always_redraw(lambda: VerticeWhistle(self.coordinates, **self.kwargs))
 
-    def set_dot_params(self, **kwargs):
+    def set_params(self, **kwargs):
         return VerticeWhistle(coordinates=self.coordinates, **kwargs)
 
 
 class VectorWhistle(Line):
     """
-
+    Класс, отвечающий за математическую реализацию векторов
     """
     def __init__(self, vertice_1: VerticeWhistle, vertice_2: VerticeWhistle, **kwargs):
         """
@@ -100,12 +100,12 @@ class VectorWhistle(Line):
         """
         return self.coordinates[0] * vector.coordinates[0] + self.coordinates[1] * vector.coordinates[1]
 
-    def get_reversed(self, **kwargs) -> 'VectorWhistle':
+    def get_reversed(self) -> 'VectorWhistle':
         """
         Метод, возвращающий вектор, равный по модулю и противоположный по направлению вектору self
         :return: Противоположный вектор
         """
-        return VectorWhistle(self.vertice_2, self.vertice_1, **kwargs)
+        return VectorWhistle(self.vertice_2, self.vertice_1, **self.kwargs)
 
     def get_intersection_with(self, vector: 'VectorWhistle', **kwargs) -> VerticeWhistle:
         """
@@ -141,7 +141,7 @@ class VectorWhistle(Line):
         """
         return always_redraw(lambda: VectorWhistle(self.vertice_1, self.vertice_2, **self.kwargs))
 
-    def set_line_params(self, **kwargs):
+    def set_params(self, **kwargs):
         return VectorWhistle(self.vertice_1, self.vertice_2, **kwargs)
 
     @property
@@ -183,7 +183,7 @@ class VectorWhistle(Line):
 
 class AngleWhistle(Angle):
     """
-
+    Метод, отвечающий за математическую реализацию углов
     """
     def __init__(self, vector_1: VectorWhistle, vector_2: VectorWhistle, **kwargs):
         """
@@ -250,7 +250,7 @@ class AngleWhistle(Angle):
         """
         return always_redraw(lambda: AngleWhistle(self.vector_1, self.vector_2, **self.kwargs))
 
-    def set_angle_params(self, **kwargs):
+    def set_params(self, **kwargs):
         return AngleWhistle(self.vector_1, self.vector_2, **kwargs)
 
     def make_right(self, **kwargs):
@@ -259,7 +259,7 @@ class AngleWhistle(Angle):
 
 class TriangleWhistle(Polygon):
     """
-
+    Класс, отвечающий за математическую реализацию треугольника
     """
     def __init__(self, A_vertice: VerticeWhistle, B_vertice: VerticeWhistle, C_vertice: VerticeWhistle, always_redraw_bool: bool, **kwargs):
         """
@@ -422,90 +422,3 @@ class TriangleWhistle(Polygon):
             return adjacent_alpha_bis.get_intersection_with(adjacent_beta_bis, **kwargs)
         else:
             raise ValueError
-
-
-class TestMyOwnClasses(MovingCameraScene):
-    def construct(self):
-        number_plane = NumberPlane(x_range=[-50, 50, 1], y_range=[-50, 50, 1],
-                                   background_line_style={"stroke_color": GREY, "stroke_width": 1,
-                                                          "stroke_opacity": 0.6},
-                                   axis_config={"color": GREY, "stroke_opacity": 0.6})
-        self.play(Create(number_plane))
-        self.wait()
-        A = VerticeWhistle(coordinates=np.array([-3, 2, 0]), radius=0.07, color=YELLOW, stroke_color=BLACK, stroke_width=1)
-        B = VerticeWhistle(coordinates=np.array([0, -2, 0]), radius=0.07, color=YELLOW, stroke_color=BLACK, stroke_width=1)
-        C = VerticeWhistle(coordinates=np.array([3, 3, 0]), radius=0.07, color=YELLOW, stroke_color=BLACK, stroke_width=1)
-        A_tex = MathTex("A").next_to(A, LEFT)
-        B_tex = MathTex("B").next_to(B, DOWN)
-        C_tex = MathTex("C").next_to(C, RIGHT)
-
-        triangle = TriangleWhistle(A, B, C, z_index=-1, color=WHITE, stroke_opacity=0.7, always_redraw_bool=False)
-
-        A1 = VerticeWhistle(coordinates=np.array([-3, 2, 0]), radius=0.07, color=BLUE, stroke_color=BLACK, stroke_width=1).next_to(B, 0.000001*RIGHT)
-        AA1 = VectorWhistle(vertice_1=A, vertice_2=A1, color=WHITE, stroke_opacity=0.8, z_index=-1).get_always_redraw()
-        A1_end = triangle.get_bisector_to_side(vertice=triangle.A_vertice).vertice_2
-
-        self.play(Create(A), Create(B), Create(C))
-        self.play(Write(A_tex), Write(B_tex), Write(C_tex))
-        self.wait()
-        self.play(Create(triangle))
-        self.wait()
-
-        self.add(A1, AA1)
-        self.play(MoveAlongPath(A1, triangle.BC_vector, run_time=2))
-        self.play(ApplyMethod(A1.move_to, A1_end, run_time=2))
-        self.wait()
-
-        half_alpha_1 = AngleWhistle(vector_2=triangle.AC_vector, vector_1=AA1, radius=0.75, color=YELLOW, z_index=-1)
-        half_alpha_2 = AngleWhistle(vector_1=triangle.AB_vector, vector_2=AA1, radius=0.75, color=YELLOW, z_index=-1)
-        self.play(Create(half_alpha_1), Create(half_alpha_2))
-        self.wait()
-
-        B1 = VerticeWhistle(coordinates=np.array([0, -2, 0]), radius=0.07, color=BLUE, stroke_color=BLACK, stroke_width=1)
-        BB1 = VectorWhistle(vertice_1=B, vertice_2=B1, color=WHITE, stroke_opacity=0.8, z_index=-1).get_always_redraw()
-        B1_end = triangle.get_bisector_to_side(vertice=triangle.B_vertice).vertice_2
-        self.add(B1, BB1)
-        self.play(MoveAlongPath(B1, triangle.AC_vector, run_time=2))
-        self.play(ApplyMethod(B1.move_to, B1_end, run_time=2))
-
-        half_beta_1 = AngleWhistle(vector_2=triangle.BA_vector, vector_1=BB1, radius=0.75, color=PURPLE, z_index=-1)
-        half_beta_2 = AngleWhistle(vector_1=triangle.BC_vector, vector_2=BB1, radius=0.75, color=PURPLE, z_index=-1)
-        self.play(Create(half_beta_1), Create(half_beta_2))
-
-        O = triangle.get_incenter(radius=0.07, color=BLUE, stroke_color=BLACK, stroke_width=1)
-        CC1 = triangle.get_bisector_to_side(vertice=triangle.C_vertice, color=WHITE, stroke_opacity=0.8, z_index=-1)
-        C1 = CC1.vertice_2.set_dot_params(radius=0.07, color=BLUE, stroke_color=BLACK, stroke_width=1)
-        self.play(Create(O))
-        self.play(Create(CC1))
-        self.play(Create(C1))
-
-        half_gamma_1 = AngleWhistle(vector_1=triangle.CA_vector, vector_2=CC1, radius=0.75, color=RED, z_index=-1)
-        half_gamma_2 = AngleWhistle(vector_2=triangle.CB_vector, vector_1=CC1, radius=0.75, color=RED, z_index=-1)
-        self.play(Create(half_gamma_1), Create(half_gamma_2))
-
-        circle = Circle(radius=1, color=BLUE).move_to(O)
-        self.play(Create(circle))
-        self.play(circle.animate.scale(triangle.get_incenter_radius()))
-
-        # triangle_redraw = TriangleWhistle(A, B, C, z_index=-1, color=WHITE, stroke_opacity=0.7, always_redraw_bool=True)
-        # A1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.A_vertice).vertice_2.get_always_redraw()
-        # B1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.B_vertice).vertice_2.get_always_redraw()
-        # C1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.C_vertice).vertice_2.get_always_redraw()
-        # AA1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.A_vertice)
-        # BB1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.B_vertice)
-        # CC1_redraw = triangle_redraw.get_bisector_to_side(vertice=triangle_redraw.C_vertice)
-        # O_redraw = always_redraw(lambda: triangle_redraw.get_incenter())
-        # half_alpha_1_redraw = AngleWhistle(vector_2=triangle_redraw.AC_vector, vector_1=AA1, radius=0.75, color=YELLOW, z_index=-1).get_always_redraw()
-        # half_alpha_2_redraw = AngleWhistle(vector_1=triangle_redraw.AB_vector, vector_2=AA1, radius=0.75, color=YELLOW, z_index=-1).get_always_redraw()
-        # half_beta_1_redraw = AngleWhistle(vector_2=triangle_redraw.BA_vector, vector_1=BB1, radius=0.75, color=PURPLE, z_index=-1).get_always_redraw()
-        # half_beta_2_redraw = AngleWhistle(vector_1=triangle_redraw.BC_vector, vector_2=BB1, radius=0.75, color=PURPLE, z_index=-1).get_always_redraw()
-        # half_gamma_1_redraw = AngleWhistle(vector_1=triangle_redraw.CA_vector, vector_2=CC1, radius=0.75, color=RED, z_index=-1).get_always_redraw()
-        # half_gamma_2_redraw = AngleWhistle(vector_2=triangle_redraw.CB_vector, vector_1=CC1, radius=0.75, color=RED, z_index=-1).get_always_redraw()
-        # circle_redraw = always_redraw(lambda: Circle(triangle_redraw.get_incenter_radius()).move_to(O))
-        # self.play(FadeOut(A_tex), FadeOut(B_tex), FadeOut(C_tex))
-        # self.add(A1_redraw, B1_redraw, C1_redraw, AA1_redraw, BB1_redraw, CC1_redraw, O_redraw, half_beta_1_redraw, half_beta_2_redraw, half_gamma_2_redraw, half_gamma_1_redraw,circle_redraw, half_alpha_1_redraw, half_alpha_2_redraw, triangle_redraw.AB_vector, triangle_redraw.BC_vector, triangle_redraw.AC_vector)
-        # self.remove(A, B, C, triangle, O, half_alpha_1, half_alpha_2, half_gamma_1, half_gamma_2, half_beta_1, half_beta_2, circle, AA1, BB1, CC1, C1, B1, A1)
-        # self.wait()
-        # self.play(ApplyMethod(triangle_redraw.A_vertice.shift, 3*LEFT))
-
-
